@@ -61,4 +61,4 @@ Send a GET request to `http://localhost:8000/files/`
 
 ## File Storage
 
-Files are stored locally in the `media/uploads/` directory. In a production environment, you might want to use a cloud storage solution.
+Files are stored locally in the `media/uploads/` directory.
