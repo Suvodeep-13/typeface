@@ -41,7 +41,7 @@ class FileDetailView(APIView):
     def get(self, request, file_id):
         file_obj = self.get_object(file_id)
         if file_obj is None:
-            return JsonResponse({'message':'File not found.'},status=status.HTTP_404_NOT_FOUND)
+            return Response({'message':'File not found.'},status=status.HTTP_404_NOT_FOUND)
         
         file_path = file_obj.file.path
         return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=file_obj.name)
@@ -60,7 +60,10 @@ class FileDetailView(APIView):
             file_obj.size = file.size
             file_obj.file_type = os.path.splitext(file.name)[1][1:]
         serializer.save()
-        return Response(FileSerializer(file_obj).data)
+        return Response({
+                'message': 'File updated successfully',
+                'file': FileSerializer(file_obj).data,
+            }, status=status.HTTP_200_OK)
 
     def delete(self, request, file_id):
         file_obj = self.get_object(file_id)
@@ -68,7 +71,7 @@ class FileDetailView(APIView):
             return Response({'message':'File not found.'}, status=status.HTTP_404_NOT_FOUND)
         
         file_obj.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'message':'File deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
 class FileListView(APIView):
     def get(self, request):
