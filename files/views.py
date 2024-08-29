@@ -5,6 +5,8 @@ from rest_framework import status
 from django.http import FileResponse
 from .models import File
 from .serializers import FileSerializer, FileUploadSerializer
+from .A import LRUCache
+
 import os
 
 
@@ -37,6 +39,8 @@ class FileDetailView(APIView):
             return File.objects.get(id=file_id)
         except File.DoesNotExist:
             return None
+        
+    cache = LRUCache(2)
 
     def get(self, request, file_id):
         file_obj = self.get_object(file_id)
@@ -44,7 +48,12 @@ class FileDetailView(APIView):
             return Response({'message':'File not found.'},status=status.HTTP_404_NOT_FOUND)
         
         file_path = file_obj.file.path
-        return FileResponse(open(file_path, 'rb'), as_attachment=True, filename=file_obj.name)
+        response_path = self.cache.get(file_id)
+        if response_path == -1:
+            print("Cache miss")
+            self.cache.put(file_id, file_path)
+            response_path = self.cache.get(file_id)
+        return FileResponse(open(response_path, 'rb'), as_attachment=True, filename=file_obj.name)
 
     def put(self, request, file_id):
         file_obj = self.get_object(file_id)
@@ -69,7 +78,7 @@ class FileDetailView(APIView):
         file_obj = self.get_object(file_id)
         if file_obj is None:
             return Response({'message':'File not found.'}, status=status.HTTP_404_NOT_FOUND)
-        
+        # delete the file from 
         file_obj.delete()
         return Response({'message':'File deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
